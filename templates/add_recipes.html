@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Organisateur de Recettes{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center mb-0">{{ title }}</h2>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Titre -->
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Titre de la recette *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Instructions -->
+                    <div class="mb-3">
+                        <label for="{{ form.instructions.id_for_label }}" class="form-label">Instructions *</label>
+                        {{ form.instructions }}
+                        {% if form.instructions.errors %}
+                            <div class="text-danger">{{ form.instructions.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Temps de préparation -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.preparation_time.id_for_label }}" class="form-label">Temps de préparation (minutes) *</label>
+                            {{ form.preparation_time }}
+                            {% if form.preparation_time.errors %}
+                                <div class="text-danger">{{ form.preparation_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Catégorie -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Catégorie *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Ingrédients -->
+                    <div class="mb-3">
+                        <label for="{{ form.ingredients.id_for_label }}" class="form-label">Ingrédients *</label>
+                        {{ form.ingredients }}
+                        <small class="form-text text-muted">Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs ingrédients</small>
+                        {% if form.ingredients.errors %}
+                            <div class="text-danger">{{ form.ingredients.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Image -->
+                    <div class="mb-4">
+                        <label for="{{ form.image.id_for_label }}" class="form-label">Image de la recette</label>
+                        {{ form.image }}
+                        {% if form.image.errors %}
+                            <div class="text-danger">{{ form.image.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Boutons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary me-md-2">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Créer la recette</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

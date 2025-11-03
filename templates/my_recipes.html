@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Recettes - Organisateur de Recettes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🍳 Mes Recettes</h2>
+    <a href="{% url 'create_recipe' %}" class="btn btn-success">+ Nouvelle Recette</a>
+</div>
+
+{% if recipes %}
+    <div class="row">
+        {% for recipe in recipes %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-white">🍳 Pas d'image</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ recipe.title }}</h5>
+                        <p class="card-text text-muted flex-grow-1">{{ recipe.description|truncatewords:15 }}</p>
+                        
+                        <div class="mt-auto">
+                            <p class="mb-1">
+                                <strong>Catégorie :</strong> 
+                                <span class="badge bg-primary">{{ recipe.category.name }}</span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Note :</strong> 
+                                <span class="text-warning">{% if recipe.rating %}{{ recipe.rating }}/5 ⭐{% else %}Pas encore noté{% endif %}</span>
+                            </p>
+                            <p class="mb-3">
+                                <strong>Temps :</strong> {{ recipe.preparation_time }} min
+                            </p>
+                            <a href="{% url 'recipe_detail' recipe.id %}" class="btn btn-primary w-100">Voir la recette</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <h4>🥺 Vous n'avez pas encore créé de recettes</h4>
+        <p class="text-muted">Commencez par créer votre première recette !</p>
+        <a href="{% url 'create_recipe' %}" class="btn btn-success btn-lg mt-3">Créer ma première recette</a>
+    </div>
+{% endif %}
+{% endblock %}
