@@ -4,43 +4,48 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-8">
-        <!-- Image de la recette -->
-        {% if recipe.image %}
-            <img src="{{ recipe.image.url }}" class="img-fluid rounded mb-4" alt="{{ recipe.title }}">
-        {% endif %}
-        
+    <div class="col-lg-8 offset-lg-2">
+
+        <div class="mb-4">
+            <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                ← Retour aux recettes
+            </a>
+        </div>
+
         <h1>{{ recipe.title }}</h1>
+
+        {% if recipe.image %}
+            <img src="{{ recipe.image.url }}" class="img-fluid rounded my-4" alt="{{ recipe.title }}">
+        {% endif %}
+
         <p class="lead">{{ recipe.description }}</p>
-        
-        <!-- Métadonnées -->
+
         <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center">
+            <div class="col-md-3 col-6"> <div class="card text-center h-100">
                     <div class="card-body">
                         <h5>⏱️</h5>
                         <p class="mb-0">{{ recipe.preparation_time }} min</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
+            <div class="col-md-3 col-6">
+                <div class="card text-center h-100">
                     <div class="card-body">
                         <h5>⭐</h5>
                         <p class="mb-0">{{ recipe.rating|default:"-" }}/5</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
+            <div class="col-md-3 col-6 mt-3 mt-md-0">
+                <div class="card text-center h-100">
                     <div class="card-body">
                         <h5>📁</h5>
                         <p class="mb-0">{{ recipe.category }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
+            <div class="col-md-3 col-6 mt-3 mt-md-0">
+                <div class="card text-center h-100">
                     <div class="card-body">
                         <h5>👨‍🍳</h5>
                         <p class="mb-0">{{ recipe.author }}</p>
@@ -48,8 +53,7 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Ingrédients -->
+
         <div class="card mb-4">
             <div class="card-header">
                 <h4>📝 Ingrédients</h4>
@@ -69,8 +73,7 @@
                 </ul>
             </div>
         </div>
-        
-        <!-- Instructions -->
+
         <div class="card">
             <div class="card-header">
                 <h4>👨‍🍳 Instructions</h4>
@@ -83,34 +86,44 @@
                 {% endif %}
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-4">
-        <!-- Avis -->
-        <div class="card">
-            <div class="card-header">
-                <h4>💬 Avis des utilisateurs</h4>
-            </div>
-            <div class="card-body">
-                {% for review in recipe.reviews.all %}
-                    <div class="border-bottom pb-3 mb-3">
-                        <strong>{{ review.user.username }}</strong>
-                        <span class="text-warning">⭐ {{ review.rating }}/5</span>
-                        <p class="mb-1">{{ review.comment }}</p>
-                        <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+
+        <div class="reviews-column mt-5"> <h4>💬 Avis et Commentaires</h4>
+            <hr>
+
+            {% if user.is_authenticated %}
+                <h5>Laisser un avis</h5>
+                <form method="POST" action="#comments"> {% csrf_token %}
+
+                    <div class="mb-2">
+                        <label class="form-label">{{ review_form.rating.label }}</label>
+                        <div class="star-rating-form">
+                            {% for value, text in review_form.rating.field.choices|slice:"::-1" %}
+                                <input type="radio" name="rating" id="star-{{ value }}" value="{{ value }}">
+                                <label for="star-{{ value }}">★</label>
+                            {% endfor %}
+                        </div>
                     </div>
-                {% empty %}
-                    <p class="text-muted">Aucun avis pour le moment.</p>
-                {% endfor %}
-            </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ review_form.comment.label }}</label>
+                        {{ review_form.comment }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Envoyer l'avis</button>
+                </form>
+                <hr class="my-4">
+            {% else %}
+                <p><a href="{% url 'login' %}">Connectez-vous</a> pour laisser un avis.</p>
+                <hr class="my-4">
+            {% endif %}
+
+            <h5 class="mt-3">Commentaires</h5>
+
+            {% for review in reviews %}
+                {% include "partials/_review.html" with review=review recipe=recipe %}
+            {% empty %}
+                <p class="text-muted">Aucun avis pour le moment.</p>
+            {% endfor %}
         </div>
-        
-        <!-- Retour à l'accueil -->
-        <div class="mt-3">
-            <a href="{% url 'home' %}" class="btn btn-outline-primary w-100">
-                ← Retour aux recettes
-            </a>
-        </div>
-    </div>
-</div>
-{% endblock %}
+
+    </div> </div> {% endblock %}

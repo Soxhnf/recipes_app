@@ -1,0 +1,71 @@
+{% if review %}
+<div class="review 
+    {% if review.user == recipe.author %}review-author{% endif %}" 
+    style="{% if review.parent %}margin-left: 0;{% endif %}"> <div class="review-avatar" title="{{ review.user.username }}">
+        {{ review.user.username|first|upper }}
+    </div>
+
+    <div class="review-body">
+        <div class="review-header">
+            {{ review.user.username }}
+
+            {% if review.user == recipe.author %}
+                <span class="badge bg-success author-badge">Auteur</span>
+            {% endif %}
+
+            {% if not review.parent %}
+                <span class="text-warning">★ {{ review.rating }}/5</span>
+            {% endif %}
+        </div>
+
+        <p class="review-text">{{ review.comment }}</p>
+
+        <div class="review-actions">
+            <span class="text-muted">{{ review.created_at|date:"d/m/Y" }}</span>
+
+            {% if user.is_authenticated %}
+                <span>·</span>
+                <a data-bs-toggle="collapse" href="#reply-form-{{ review.id }}" role="button">
+                    Répondre
+                </a>
+            {% endif %}
+
+            {% if user.is_authenticated and user == recipe.author %}
+                <span>·</span>
+                <a href="{% url 'delete_review' review.id %}"
+                   class="text-danger"
+                   onclick="return confirm('Êtes-vous sûr ?');">
+                   Supprimer
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="collapse reply-form mt-3" id="reply-form-{{ review.id }}">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="parent_id" value="{{ review.id }}">
+                <div class="mb-2">
+                    <textarea name="comment" rows="3" class="form-control form-control-sm"
+                              placeholder="Écrivez votre réponse..."
+                              required id="id_comment_{{ review.id }}"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Envoyer</button>
+            </form>
+        </div>
+
+        {% with replies=review.replies.all %}
+            {% if replies %}
+                <div class="replies-toggle mt-2">
+                    <a data-bs-toggle="collapse" href="#replies-container-{{ review.id }}" role="button">
+                        Voir {{ replies|length }} réponse{% if replies|length > 1 %}s{% endif %} ▼
+                    </a>
+                </div>
+
+                <div class="collapse replies-container mt-3" id="replies-container-{{ review.id }}">
+                    {% for reply in replies %}
+                        {% include "partials/_review.html" with review=reply recipe=recipe %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        </div></div>{% endif %}
