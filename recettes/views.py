@@ -1,3 +1,5 @@
+import json
+
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Recipe, Category, Ingredient, Review
@@ -116,26 +118,30 @@ def recipe_detail(request, recipe_id):
 
 @login_required
 def create_recipe(request):
+    storage = messages.get_messages(request)
+    storage.used = True
+
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
-            # Créer la recette sans sauvegarder tout de suite
             recipe = form.save(commit=False)
-            # Assigner l'utilisateur connecté comme auteur
             recipe.author = request.user
             recipe.save()
-            # Sauvegarder les ingrédients (ManyToMany)
-            form.save_m2m()
+
+            # Handle custom ingredients
+            ingredients_json = form.cleaned_data.get('ingredients_list')
+            if ingredients_json:
+                ingredients = json.loads(ingredients_json)
+                for name in ingredients:
+                    ing, created = Ingredient.objects.get_or_create(name=name.strip().capitalize())
+                    recipe.ingredients.add(ing)
+
             messages.success(request, 'Votre recette a été créée avec succès !')
             return redirect('recipe_detail', recipe_id=recipe.id)
     else:
         form = RecipeForm()
 
-    context = {
-        'form': form,
-        'title': 'Créer une nouvelle recette'
-    }
-    return render(request, 'add_recipes.html', context)
+    return render(request, 'add_recipes.html', {'form': form, 'title': 'Créer une nouvelle recette'})
 
 
 @login_required
@@ -161,3 +167,17 @@ def delete_review(request, review_id):
         messages.error(request, "Vous n'avez pas la permission de faire cela.")
 
     return redirect('recipe_detail', recipe_id=recipe_id)
+@login_required
+def delete_recipe(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+
+    if recipe.author != request.user:
+        messages.error(request, "Vous n'avez pas la permission de supprimer cette recette.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        recipe.delete()
+        messages.success(request, "Recette supprimée avec succès.")
+        return redirect('home')
+
+    return redirect('recipe_detail', recipe_id=recipe.id)

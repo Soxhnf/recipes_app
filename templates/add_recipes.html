@@ -67,15 +67,58 @@
                         </div>
                     </div>
                     
-                    <!-- Ingrédients -->
+                    <!-- Ingrédients dynamiques -->
                     <div class="mb-3">
-                        <label for="{{ form.ingredients.id_for_label }}" class="form-label">Ingrédients *</label>
-                        {{ form.ingredients }}
-                        <small class="form-text text-muted">Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs ingrédients</small>
-                        {% if form.ingredients.errors %}
-                            <div class="text-danger">{{ form.ingredients.errors }}</div>
-                        {% endif %}
+                        <label class="form-label">Ingrédients *</label>
+                        <div class="input-group mb-2">
+                            <input type="text" id="ingredientInput" class="form-control" placeholder="Entrez un ingrédient">
+                            <button type="button" id="addIngredientBtn" class="btn btn-success">Ajouter</button>
+                        </div>
+
+                        <ul id="ingredientList" class="list-group mb-2"></ul>
+
+                        <!-- hidden field -->
+                        {{ form.ingredients_list }}
                     </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const input = document.getElementById('ingredientInput');
+                        const addBtn = document.getElementById('addIngredientBtn');
+                        const list = document.getElementById('ingredientList');
+                        const hidden = document.getElementById('{{ form.ingredients_list.id_for_label }}');
+
+                        let ingredients = [];
+
+                        function renderList() {
+                            list.innerHTML = '';
+                            ingredients.forEach((ing, index) => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                                li.innerHTML = `
+                                    ${ing}
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeIngredient(${index})">×</button>
+                                `;
+                                list.appendChild(li);
+                            });
+                            hidden.value = JSON.stringify(ingredients);
+                        }
+
+                        addBtn.addEventListener('click', () => {
+                            const val = input.value.trim();
+                            if (val && !ingredients.includes(val)) {
+                                ingredients.push(val);
+                                input.value = '';
+                                renderList();
+                            }
+                        });
+
+                        window.removeIngredient = (i) => {
+                            ingredients.splice(i, 1);
+                            renderList();
+                        };
+                    });
+                    </script>
                     
                     <!-- Image -->
                     <div class="mb-4">

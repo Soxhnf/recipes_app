@@ -52,6 +52,18 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3 col-6 mt-3 mt-md-0">
+                {% if user.is_authenticated and recipe.author == user %}
+                    <form method="POST" action="{% url 'delete_recipe' recipe.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Voulez-vous vraiment supprimer cette recette ?');">
+                            🗑️ Supprimer la recette
+                        </button>
+                    </form>
+                 {% endif %}
+            </div>
+
         </div>
 
         <div class="card mb-4">

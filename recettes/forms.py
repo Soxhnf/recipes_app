@@ -3,22 +3,32 @@ from .models import Recipe, Category, Ingredient, Review
 
 
 class RecipeForm(forms.ModelForm):
-    # Champ pour sélectionner plusieurs ingrédients
-    ingredients = forms.ModelMultipleChoiceField(
-        queryset=Ingredient.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
-        required=True
+    # Champ caché pour la liste dynamique d'ingrédients (rempli via JS)
+    ingredients_list = forms.CharField(
+        label='Ingrédients',
+        required=False,
+        widget=forms.HiddenInput()
     )
 
-    # Champ pour les instructions avec une zone de texte plus grande
+    # Champ d’instructions (zone de texte large)
     instructions = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 6, 'class': 'form-control'}),
-        required=True
+        required=True,
+        label="Instructions"
     )
 
     class Meta:
         model = Recipe
-        fields = ['title', 'description', 'instructions', 'preparation_time', 'category', 'ingredients', 'image']
+        fields = [
+            'title',
+            'description',
+            'instructions',
+            'preparation_time',
+            'category',
+            'image',
+            'ingredients_list'
+        ]
+
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
@@ -26,6 +36,7 @@ class RecipeForm(forms.ModelForm):
             'category': forms.Select(attrs={'class': 'form-control'}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
+
         labels = {
             'preparation_time': 'Temps de préparation (minutes)',
             'image': 'Image de la recette (optionnel)',
