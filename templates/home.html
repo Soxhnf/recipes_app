@@ -104,4 +104,36 @@
         </div>
     {% endfor %}
 </div>
+
+<!-- 🌍 Recettes du monde (TheMealDB) -->
+{% if api_recipes %}
+    <hr class="my-5">
+    <h3 class="mb-4 text-center">Sélection internationale de recettes</h3>
+
+    <div class="row">
+        {% for recipe in api_recipes %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <img src="{{ recipe.strMealThumb }}" class="card-img-top" alt="{{ recipe.strMeal }}" style="height: 200px; object-fit: cover;">
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ recipe.strMeal }}</h5>
+                        <p class="card-text text-muted flex-grow-1">{{ recipe.strInstructions|truncatewords:20 }}</p>
+
+                        <div class="mt-auto">
+                            <p class="mb-1">
+                                <strong>Catégorie :</strong>
+                                <span class="badge bg-success">{{ recipe.strCategory }}</span>
+                            </p>
+                            <p class="mb-1"><strong>Pays :</strong> {{ recipe.strArea }}</p>
+                            <a href="{{ recipe.strSource|default:recipe.strYoutube }}" target="_blank" class="btn btn-outline-primary w-100">
+                                Voir la recette originale
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 {% endblock %}

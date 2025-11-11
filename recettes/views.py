@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Recipe, Category, Ingredient, Review
 
@@ -24,6 +25,28 @@ def home(request):
     if min_rating:
         recipes = recipes.filter(rating__gte=float(min_rating))
 
+    # --- Charger les données de l’API ---
+    api_recipes = []
+    try:
+        response = requests.get("https://www.themealdb.com/api/json/v1/1/search.php?s=")
+        data = response.json()
+        api_recipes = data.get("meals", [])
+    except Exception as e:
+        print("Erreur API:", e)
+        api_recipes = []
+
+    # --- Appliquer les filtres aussi sur les recettes API ---
+    if api_recipes:
+        if category_name:
+            api_recipes = [r for r in api_recipes if r.get('strCategory') == category_name]
+        if ingredient_name:
+            api_recipes = [
+                r for r in api_recipes
+                if ingredient_name.lower() in (
+                    f"{r.get('strIngredient1', '')} {r.get('strIngredient2', '')} {r.get('strIngredient3', '')}"
+                ).lower()
+            ]
+
     categories = Category.objects.all()
     ingredients = Ingredient.objects.all()
 
@@ -34,6 +57,7 @@ def home(request):
         'selected_category': category_name,
         'selected_ingredient': ingredient_name,
         'selected_rating': min_rating or '',
+        'api_recipes': api_recipes,
     }
     return render(request, 'home.html', context)
 
