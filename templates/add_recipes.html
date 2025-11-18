@@ -1,141 +1,158 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ title }} - Organisateur de Recettes{% endblock %}
+{% block title %}{{ title }} - {% endblock %}
+
+{% block extra_head %}
+    <style>
+        .form-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            padding: 2rem 2.5rem; /* Plus d'espace */
+        }
+
+        /* Surbrillance orange pour les champs de formulaire */
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #fd7e14;
+            box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.2);
+        }
+
+        /* Style pour la liste d'ingrédients */
+        #ingredientList .list-group-item {
+            border-color: #f3f4f6;
+            color: #212529;
+            font-weight: 500;
+        }
+        #ingredientList .btn-danger {
+            --bs-btn-font-size: 1rem;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="text-center mb-0">{{ title }}</h2>
-            </div>
-            <div class="card-body">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
+    <div class="col-lg-8"> <h2 class="mb-4" style="font-weight: 700;">{{ title }}</h2>
 
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    <!-- Titre -->
-                    <div class="mb-3">
-                        <label for="{{ form.title.id_for_label }}" class="form-label">Titre de la recette *</label>
-                        {{ form.title }}
-                        {% if form.title.errors %}
-                            <div class="text-danger">{{ form.title.errors }}</div>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="form-card">
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">Titre de la recette *</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="text-danger">{{ form.title.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-danger">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.instructions.id_for_label }}" class="form-label">Instructions *</label>
+                    {{ form.instructions }}
+                    {% if form.instructions.errors %}
+                        <div class="text-danger">{{ form.instructions.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.preparation_time.id_for_label }}" class="form-label">Temps de préparation (minutes) *</label>
+                        {{ form.preparation_time }}
+                        {% if form.preparation_time.errors %}
+                            <div class="text-danger">{{ form.preparation_time.errors }}</div>
                         {% endif %}
                     </div>
-                    
-                    <!-- Description -->
-                    <div class="mb-3">
-                        <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
-                        {{ form.description }}
-                        {% if form.description.errors %}
-                            <div class="text-danger">{{ form.description.errors }}</div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Catégorie *</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger">{{ form.category.errors }}</div>
                         {% endif %}
                     </div>
-                    
-                    <!-- Instructions -->
-                    <div class="mb-3">
-                        <label for="{{ form.instructions.id_for_label }}" class="form-label">Instructions *</label>
-                        {{ form.instructions }}
-                        {% if form.instructions.errors %}
-                            <div class="text-danger">{{ form.instructions.errors }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="row">
-                        <!-- Temps de préparation -->
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.preparation_time.id_for_label }}" class="form-label">Temps de préparation (minutes) *</label>
-                            {{ form.preparation_time }}
-                            {% if form.preparation_time.errors %}
-                                <div class="text-danger">{{ form.preparation_time.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Catégorie -->
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.category.id_for_label }}" class="form-label">Catégorie *</label>
-                            {{ form.category }}
-                            {% if form.category.errors %}
-                                <div class="text-danger">{{ form.category.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <!-- Ingrédients dynamiques -->
-                    <div class="mb-3">
-                        <label class="form-label">Ingrédients *</label>
-                        <div class="input-group mb-2">
-                            <input type="text" id="ingredientInput" class="form-control" placeholder="Entrez un ingrédient">
-                            <button type="button" id="addIngredientBtn" class="btn btn-success">Ajouter</button>
-                        </div>
+                </div>
 
-                        <ul id="ingredientList" class="list-group mb-2"></ul>
-
-                        <!-- hidden field -->
-                        {{ form.ingredients_list }}
+                <div class="mb-3">
+                    <label class="form-label">Ingrédients *</label>
+                    <div class="input-group mb-2">
+                        <input type="text" id="ingredientInput" class="form-control" placeholder="Entrez un ingrédient">
+                        <button type="button" id="addIngredientBtn" class="btn btn-orange">Ajouter</button>
                     </div>
 
-                    <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const input = document.getElementById('ingredientInput');
-                        const addBtn = document.getElementById('addIngredientBtn');
-                        const list = document.getElementById('ingredientList');
-                        const hidden = document.getElementById('{{ form.ingredients_list.id_for_label }}');
+                    <ul id="ingredientList" class="list-group mb-2"></ul>
 
-                        let ingredients = [];
+                    {{ form.ingredients_list }}
+                </div>
 
-                        function renderList() {
-                            list.innerHTML = '';
-                            ingredients.forEach((ing, index) => {
-                                const li = document.createElement('li');
-                                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                                li.innerHTML = `
-                                    ${ing}
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeIngredient(${index})">×</button>
-                                `;
-                                list.appendChild(li);
-                            });
-                            hidden.value = JSON.stringify(ingredients);
-                        }
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const input = document.getElementById('ingredientInput');
+                    const addBtn = document.getElementById('addIngredientBtn');
+                    const list = document.getElementById('ingredientList');
+                    const hidden = document.getElementById('{{ form.ingredients_list.id_for_label }}');
 
-                        addBtn.addEventListener('click', () => {
-                            const val = input.value.trim();
-                            if (val && !ingredients.includes(val)) {
-                                ingredients.push(val);
-                                input.value = '';
-                                renderList();
-                            }
+                    let ingredients = [];
+
+                    function renderList() {
+                        list.innerHTML = '';
+                        ingredients.forEach((ing, index) => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            li.innerHTML = `
+                                ${ing}
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeIngredient(${index})">×</button>
+                            `;
+                            list.appendChild(li);
                         });
+                        hidden.value = JSON.stringify(ingredients);
+                    }
 
-                        window.removeIngredient = (i) => {
-                            ingredients.splice(i, 1);
+                    addBtn.addEventListener('click', () => {
+                        const val = input.value.trim();
+                        if (val && !ingredients.includes(val)) {
+                            ingredients.push(val);
+                            input.value = '';
                             renderList();
-                        };
+                        }
                     });
-                    </script>
-                    
-                    <!-- Image -->
-                    <div class="mb-4">
-                        <label for="{{ form.image.id_for_label }}" class="form-label">Image de la recette</label>
-                        {{ form.image }}
-                        {% if form.image.errors %}
-                            <div class="text-danger">{{ form.image.errors }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Boutons -->
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{% url 'home' %}" class="btn btn-outline-secondary me-md-2">Annuler</a>
-                        <button type="submit" class="btn btn-primary">Créer la recette</button>
-                    </div>
-                </form>
-            </div>
+
+                    window.removeIngredient = (i) => {
+                        ingredients.splice(i, 1);
+                        renderList();
+                    };
+                });
+                </script>
+
+                <div class="mb-4">
+                    <label for="{{ form.image.id_for_label }}" class="form-label">Image de la recette</label>
+                    {{ form.image }}
+                    {% if form.image.errors %}
+                        <div class="text-danger">{{ form.image.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary me-md-2">Annuler</a>
+                    <button type="submit" class="btn btn-orange">Créer la recette</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

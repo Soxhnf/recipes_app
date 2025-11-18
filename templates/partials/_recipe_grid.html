@@ -1,0 +1,80 @@
+<div class="row">
+
+    {% if recipes or api_recipes %}
+
+        {% for recipe in recipes %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="card recipe-card h-100">
+                    <div class="recipe-card-img-wrapper">
+                        {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" class="recipe-card-img" alt="{{ recipe.title }}">
+                        {% else %}
+                            <div class="recipe-card-img bg-secondary d-flex align-items-center justify-content-center">
+                                <span>🍳 Pas d'image</span>
+                            </div>
+                        {% endif %}
+                        {% if user.is_authenticated %}
+                            <button class="favorite-btn {% if user in recipe.favorited_by.all %}favorited{% endif %}"
+                                    data-recipe-id="{{ recipe.id }}" title="Ajouter aux favoris">
+                                <i class="bi bi-heart"></i>
+                                <i class="bi bi-heart-fill"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="{% url 'recipe_detail' recipe.id %}" class="stretched-link text-decoration-none" style="color: black">
+                                {{ recipe.title }}
+                            </a>
+                        </h5>
+                        <div class="recipe-meta-text">
+                            <span class="category-tag">{{ recipe.category.name }}</span>
+                            <span class="dot-separator">•</span>
+                            <span>{{ recipe.preparation_time }} min</span>
+                            <span class="dot-separator">•</span>
+                            <span class="rating-stars">
+                                {{ recipe.rating|floatformat:1 }} ⭐
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% if api_recipes %}
+            <div class="col-12">
+                <h3 class="global-recipes-title text-center mb-4 mt-4">Sélection internationale de recettes</h3>
+            </div>
+            {% for recipe in api_recipes %}
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card recipe-card h-100">
+                        <div class="recipe-card-img-wrapper">
+                            <img src="{{ recipe.strMealThumb }}" class="recipe-card-img" alt="{{ recipe.strMeal }}">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{{ recipe.strSource|default:recipe.strYoutube }}" target="_blank" class="stretched-link text-decoration-none" style="color: black">
+                                    {{ recipe.strMeal }}
+                                </a>
+                            </h5>
+                            <div class="recipe-meta-text">
+                                <span class="category-tag">{{ recipe.strCategory }}</span>
+                                <span class="dot-separator">•</span>
+                                <span>{{ recipe.strArea }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+    {% else %}
+        <div class="col-12">
+            <div class="empty-results-card">
+                <h4>Aucune recette trouvée</h4>
+                <p>Essayez de modifier vos critères de recherche ou <a href="{% url 'home' %}">réinitialisez les filtres</a>.</p>
+            </div>
+        </div>
+    {% endif %}
+
+</div>

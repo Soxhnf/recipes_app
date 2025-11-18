@@ -1,33 +1,42 @@
 import json
-
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Recipe, Category, Ingredient, Review
-
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
+from django.db.models import Q
+import functools
+import operator
 from .forms import RecipeForm, ReviewForm
+from django.template.loader import render_to_string
 
 
 def home(request):
     recipes = Recipe.objects.all()
 
-    # Filtres
+    # --- Lecture des filtres de l'URL ---
     category_name = request.GET.get('category')
-    ingredient_name = request.GET.get('ingredient')
-    min_rating = request.GET.get('min_rating')
+    ingredient_query = request.GET.get('ingredient')
+    show_favorites = request.GET.get('favorites')
 
+    # --- Logique de filtre (inchangée) ---
+    if ingredient_query:
+        search_terms = ingredient_query.split()
+        conditions = []
+        for term in search_terms:
+            conditions.append(
+                Q(title__icontains=term) | Q(ingredients__name__icontains=term)
+            )
+        if conditions:
+            query = functools.reduce(operator.and_, conditions)
+            recipes = recipes.filter(query)
     if category_name:
         recipes = recipes.filter(category__name=category_name)
+    if show_favorites == 'true' and request.user.is_authenticated:
+        recipes = recipes.filter(favorited_by=request.user)
 
-    if ingredient_name:
-        recipes = recipes.filter(ingredients__name__icontains=ingredient_name)
-
-    if min_rating:
-        recipes = recipes.filter(rating__gte=float(min_rating))
-
-    # --- Charger les données de l’API ---
+    # --- Appel API ---
     api_recipes = []
     try:
         response = requests.get("https://www.themealdb.com/api/json/v1/1/search.php?s=")
@@ -37,30 +46,55 @@ def home(request):
         print("Erreur API:", e)
         api_recipes = []
 
-    # --- Appliquer les filtres aussi sur les recettes API ---
+    # --- Filtrage API ---
     if api_recipes:
         if category_name:
             api_recipes = [r for r in api_recipes if r.get('strCategory') == category_name]
-        if ingredient_name:
-            api_recipes = [
-                r for r in api_recipes
-                if ingredient_name.lower() in (
-                    f"{r.get('strIngredient1', '')} {r.get('strIngredient2', '')} {r.get('strIngredient3', '')}"
-                ).lower()
-            ]
+        if ingredient_query:
+            search_terms = ingredient_query.split()
+            filtered_api_recipes = []
+            for r in api_recipes:
+                all_ingredients = [r.get(f'strIngredient{i}') or '' for i in range(1, 21)]
+                api_ingredients_str = " ".join(all_ingredients).lower()
+                recipe_title = (r.get('strMeal') or '').lower()
+                search_corpus = f"{recipe_title} {api_ingredients_str}"
+                if all(term.lower() in search_corpus for term in search_terms):
+                    filtered_api_recipes.append(r)
+            api_recipes = filtered_api_recipes
 
     categories = Category.objects.all()
-    ingredients = Ingredient.objects.all()
 
+    # --- Compteur de favoris  ---
+    favorites_count = 0
+    if request.user.is_authenticated:
+        favorites_count = request.user.favorite_recipes.count()
+
+    # --- Préparation du contexte (ajout de 'user') ---
     context = {
-        'recipes': recipes,
+        'recipes': recipes.distinct(),
         'categories': categories,
-        'ingredients': ingredients,
         'selected_category': category_name,
-        'selected_ingredient': ingredient_name,
-        'selected_rating': min_rating or '',
+        'selected_ingredient': ingredient_query,
         'api_recipes': api_recipes,
+        'favorites_count': favorites_count,
+        'user': request.user  # Important pour le partiel
     }
+
+    # --- DÉTECTION AJAX RENVOIE DU JSON ---
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # 1. Génère le HTML de la grille dans une chaîne de caractères
+        html = render_to_string(
+            'partials/_recipe_grid.html',
+            context,
+            request=request
+        )
+        # 2. Renvoie le HTML ET le compteur à jour
+        return JsonResponse({
+            'html': html,
+            'favorites_count': favorites_count
+        })
+
+    # Si ce n'est pas de l'AJAX, renvoie la page complète
     return render(request, 'home.html', context)
 
 
@@ -90,7 +124,7 @@ def recipe_detail(request, recipe_id):
                 return redirect('recipe_detail', recipe_id=recipe.id)
 
         else:
-            # C'est un NOUVEL AVIS (note + commentaire optionnel)
+            #  NOUVEL AVIS (note + commentaire optionnel)
 
             # --- VÉRIFICATION MANUELLE DE LA NOTE ---
             rating_value = request.POST.get('rating')
@@ -181,3 +215,77 @@ def delete_recipe(request, recipe_id):
         return redirect('home')
 
     return redirect('recipe_detail', recipe_id=recipe.id)
+
+
+@login_required
+def toggle_favorite(request, recipe_id):
+    # Vérifie que c'est une requête POST (pour la sécurité)
+    if request.method == 'POST':
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
+        if recipe.favorited_by.filter(id=request.user.id).exists():
+            recipe.favorited_by.remove(request.user)
+            is_favorited = False
+        else:
+            recipe.favorited_by.add(request.user)
+            is_favorited = True
+
+        # Renvoie le nouveau statut et le nouveau compte
+        new_count = request.user.favorite_recipes.count()
+        return JsonResponse({'status': 'ok', 'is_favorited': is_favorited, 'favorites_count': new_count})
+
+    # Si ce n'est pas POST, ne rien faire
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+
+@login_required
+def edit_recipe(request, recipe_id):
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+
+    # Sécurité : Vérifie que l'utilisateur est bien l'auteur
+    if recipe.author != request.user:
+        messages.error(request, "Vous n'êtes pas autorisé à modifier cette recette.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        # Traite le formulaire soumis
+        form = RecipeForm(request.POST, request.FILES, instance=recipe)
+        if form.is_valid():
+            # Sauvegarde la recette (mais pas les M2M)
+            recipe = form.save(commit=False)
+            recipe.author = request.user  # Ré-assigne l'auteur (juste au cas où)
+            recipe.save()
+
+            # Logique pour les ingrédients (identique à create_recipe)
+            # 1. Efface les anciens ingrédients
+            recipe.ingredients.clear()
+
+            # 2. Ajoute les nouveaux
+            ingredients_json = form.cleaned_data.get('ingredients_list')
+            if ingredients_json:
+                ingredients = json.loads(ingredients_json)
+                for name in ingredients:
+                    ing, created = Ingredient.objects.get_or_create(name=name.strip().capitalize())
+                    recipe.ingredients.add(ing)
+
+            messages.success(request, 'Recette modifiée avec succès !')
+            return redirect('recipe_detail', recipe_id=recipe.id)
+
+    else:
+        # Requête GET : Affiche le formulaire pré-rempli
+
+        # 1. Récupère les ingrédients actuels de la recette
+        current_ingredients = list(recipe.ingredients.all().values_list('name', flat=True))
+
+        # 2. Convertit-les en une chaîne JSON pour le script
+        ingredients_json = json.dumps(current_ingredients)
+
+        # 3. Initialise le formulaire avec les données de la recette ET le JSON des ingrédients
+        form = RecipeForm(instance=recipe, initial={'ingredients_list': ingredients_json})
+
+    # Réutilise le template 'add_recipes.html'
+    context = {
+        'form': form,
+        'title': 'Modifier ma Recette'
+    }
+    return render(request, 'add_recipes.html', context)

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier le Profil - {% endblock %}
+
+{% block extra_head %}
+    <style>
+        .my-recipes-layout { display: grid; grid-template-columns: 280px 1fr; gap: 2rem; }
+        .sidebar-nav-wrapper { position: sticky; top: 1.5rem; align-self: start; background-color: #ffffff; border-radius: 1rem; border: 1px solid #f3f4f6; box-shadow: 0 4px 6px rgba(0,0,0,0.02); padding: 1.5rem; }
+        @media (max-width: 991px) { .my-recipes-layout { grid-template-columns: 1fr; } .sidebar-nav-wrapper { position: static; margin-bottom: 2rem; } }
+        .sidebar-avatar { width: 60px; height: 60px; border-radius: 50%; background-color: #fd7e14; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; }
+
+        /* Ajout du style pour l'icône d'édition */
+        .sidebar-profile-link { position: relative; display: block; }
+        .sidebar-edit-icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 0.8rem;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dee2e6;
+            opacity: 0; /* Caché par défaut */
+            transition: opacity 0.2s ease;
+        }
+        .sidebar-profile-link:hover .sidebar-edit-icon {
+            opacity: 1; /* Apparaît au survol */
+        }
+
+        .sidebar-nav .nav-link { padding: 0.75rem 1rem; display: flex; align-items: center; font-size: 1rem; font-weight: 500; border-radius: 0.75rem; color: #212529; }
+        .sidebar-nav .nav-link i { font-size: 1.1rem; margin-right: 0.75rem; width: 20px; text-align: center; }
+        .sidebar-nav .nav-link:hover { background-color: #f8f9fa; }
+        .sidebar-nav .nav-link.active { background-color: #fff7ed; color: #fd7e14; }
+        .sidebar-nav .nav-link.active i { color: #fd7e14; }
+        .form-card { background-color: #ffffff; border-radius: 1rem; border: 1px solid #f3f4f6; box-shadow: 0 4px 6px rgba(0,0,0,0.02); padding: 2rem; }
+        .form-control:focus { border-color: #fd7e14; box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.2); }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="my-recipes-layout">
+
+<aside class="sidebar-nav-wrapper">
+    <a href="{% url 'accounts:edit_profile' %}" class="text-center mb-4 d-block text-decoration-none sidebar-profile-link">
+        <div class="mx-auto mb-2 sidebar-avatar">{{ user.username|first|upper }}</div>
+        <h5 class="card-title mb-0 text-dark">{{ user.username }}</h5>
+        {% if user.email %}<p class="card-text text-muted small">{{ user.email }}</p>{% endif %}
+        <span class="sidebar-edit-icon" title="Modifier le profil"><i class="bi bi-pencil-fill"></i></span>
+    </a>
+    <div class="sidebar-nav">
+        <div class="nav flex-column nav-pills" role="tablist">
+            <a href="{% url 'accounts:my_recipes' %}" class="nav-link" role="tab">
+                <i class="bi bi-book"></i>
+                <span>Mes Recettes</span>
+            </a>
+            <a href="{% url 'accounts:my_favorites' %}" class="nav-link" role="tab">
+                <i class="bi bi-heart"></i>
+                <span>Mes Favoris</span>
+            </a>
+            <hr class="my-3">
+            <a href="{% url 'create_recipe' %}" class="btn btn-orange w-100">
+                <i class="bi bi-plus-lg me-1"></i> Nouvelle Recette
+            </a>
+        </div>
+    </div>
+</aside>
+
+    <main class="recipe-content-wrapper">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <h2 class="mb-4" style="font-weight: 700;">Modifier le Profil</h2>
+        <div class="form-card mb-4">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ profile_form.username.id_for_label }}" class="form-label">Nom d'utilisateur</label>
+                    {{ profile_form.username }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ profile_form.email.id_for_label }}" class="form-label">Email</label>
+                    {{ profile_form.email }}
+                </div>
+                <button type="submit" name="change_profile" class="btn btn-orange">Enregistrer les modifications</button>
+            </form>
+        </div>
+
+        <h2 class="mb-4 mt-5" style="font-weight: 700;">Changer le mot de passe</h2>
+        <div class="form-card">
+            <form method="POST">
+                {% csrf_token %}
+                {% for field in password_form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    <input type="{{ field.field.widget.input_type }}"
+                           name="{{ field.name }}"
+                           id="{{ field.id_for_label }}"
+                           class="form-control"
+                           required>
+                    {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" name="change_password" class="btn btn-orange">Changer le mot de passe</button>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -6,52 +6,96 @@
     <title>Connexion</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        /* 2. Application de la police "Manrope" */
         body, html {
             height: 100%;
         }
+        body, .btn, .form-control, .form-label, .card-title, h2 {
+            font-family: 'Manrope', sans-serif;
+        }
 
-        /* 1. Colonne de l'image */
+        /* --- Vos styles de layout (Inchangés) --- */
         #image-column {
             background-image: url('/media/recipes/chicken-parm-pasta-third-67afbcc41b83e.avif');
             background-size: contain;
             background-repeat: no-repeat;
             background-position:left;
-
             background-color: #f8f9fa;
         }
-
-        /* 2. Colonne du formulaire */
         #form-column {
             display: flex;
             align-items: center;
             justify-content: center;
-
-            /* LA SOLUTION: Mettre la MÊME couleur de fond ICI */
             background-color: #f8f9fa;
         }
-
-        /* 3. La carte du formulaire (reste blanche par défaut, c'est ce qu'on veut) */
         .login-card, .form-card {
             max-width: 550px;
             width: 100%;
-            margin-left: -230px;
+            margin-left: -230px; /* Gardé comme vous l'aviez */
+        }
+        /* --- Fin de vos styles de layout --- */
+
+
+
+
+        /* 3. Style du titre en orange */
+        .login-title {
+            color: #fd7e14; /* Orange */
+            font-weight: 700;
+        }
+
+        /* 4. Style de surbrillance (focus) pour les champs */
+        .form-control:focus {
+            border-color: #fd7e14;
+            box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.2);
+            z-index: 2; /* S'assure que le focus passe au-dessus du label */
+        }
+        .form-floating > .form-control:focus ~ label {
+            color: #fd7e14; /* Label devient orange */
+        }
+
+        /* 5. Style pour le bouton orange */
+        .btn-orange {
+            background-color: #fd7e14;
+            border-color: #fd7e14;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        .btn-orange:hover {
+            background-color: #e67012; /* Orange plus foncé */
+            border-color: #e67012;
+            color: #ffffff;
+        }
+
+        /* 6. Style pour les liens en orange */
+        .card-body a {
+            color: #fd7e14;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .card-body a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 
 <div class="container-fluid g-0">
-    <div class="row g-0 min-vh-100"> <div class="col-lg-7 d-none d-lg-block" id="image-column">
-            </div>
+    <div class="row g-0 min-vh-100">
+        <div class="col-lg-7 d-none d-lg-block" id="image-column">
+        </div>
 
         <div class="col-lg-5 col-12" id="form-column">
-
             <div class="login-card">
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4 p-md-5">
 
-                        <h2 class="text-center mb-4"> Connexion</h2>
+                        <h2 class="text-center mb-4 login-title" style="color: black">Connexion</h2>
 
                         {% if messages %}
                             {% for message in messages %}
@@ -63,15 +107,15 @@
                             {% csrf_token %}
 
                             <div class="form-floating mb-3">
-                                <input type="text" name="username" class="form-control" id="id_username" placeholder="Nom d'utilisateur" required>
-                                <label for="id_username">Nom d'utilisateur</label>
-                            </div>
+    <input type="email" name="email" class="form-control" id="id_email" placeholder="Adresse email" required>
+    <label for="id_email">Adresse email</label>
+</div>
                             <div class="form-floating mb-3">
                                 <input type="password" name="password" class="form-control" id="id_password" placeholder="Mot de passe" required>
                                 <label for="id_password">Mot de passe</label>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 btn-lg mt-3">
+                            <button type="submit" class="btn btn-orange w-100 btn-lg mt-3">
                                 Se connecter
                             </button>
                         </form>
@@ -81,5 +125,10 @@
 
                     </div>
                 </div>
-            </div> </div> </div> </div> </body>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
 </html>

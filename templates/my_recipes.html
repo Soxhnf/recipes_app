@@ -1,70 +1,242 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Mon Espace Recettes - Organisateur de Recettes{% endblock %}
+{% block title %}{{ page_title }} - {% endblock %}
+
+{% block extra_head %}
+    <style>
+        /* --- Styles des Cartes --- */
+        .recipe-card {
+            border-radius: 1rem; overflow: hidden; border: 1px solid #f3f4f6;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: box-shadow 0.3s ease-in-out;
+            background-color: #ffffff;
+        }
+        .recipe-card:hover { box-shadow: 0 8px 16px rgba(0,0,0,0.08); }
+        .recipe-card-img-wrapper { height: 200px; overflow: hidden; position: relative; background-color: #e9ecef; }
+        .recipe-card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease-in-out; }
+        .recipe-card:hover .recipe-card-img { transform: scale(1.08); }
+
+
+        .card-action-btn {
+            position: absolute;
+            right: 0.8rem;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer;
+            z-index: 10; /* Important: pour passer au-dessus du "stretched-link" */
+        }
+        .card-action-btn i {
+            font-size: 1.1rem;
+            color: #6c757d;
+            line-height: 1;
+            transition: color 0.2s ease-in-out;
+        }
+
+        /* 2. Effet de survol (hover) pour TOUS les boutons d'action */
+        .card-action-btn:hover {
+            transform: scale(1.1);
+        }
+        .card-action-btn:hover i {
+            color: #fd7e14; /* Devient orange au survol */
+        }
+
+        /* Position du bouton Favoris */
+        .favorite-btn {
+            top: 0.8rem;
+        }
+        /* Position du bouton Modifier */
+        .edit-btn {
+            top: 3.8rem; /* 0.8rem + 40px + 0.5rem (marge) */
+        }
+
+        /* Logique d'icône pour le bouton Favoris */
+        .favorite-btn.favorited .bi-heart-fill { display: block; color: #fd7e14; }
+        .favorite-btn.favorited .bi-heart { display: none; }
+        .favorite-btn .bi-heart-fill { display: none; }
+        .favorite-btn .bi-heart { display: block; }
+
+        /* --- Styles du corps de la carte --- */
+        .recipe-card .card-body { padding: 1rem 1.25rem 1.25rem; }
+        .recipe-card .card-title {
+            font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;
+            color: #212529; text-decoration: none;
+        }
+        .recipe-card .card-title:hover { color: #fd7e14; }
+        .recipe-meta-text {
+            display: flex; flex-wrap: wrap; align-items: center;
+            gap: 0.25rem 0.5rem; font-size: 0.9rem; color: #6c757d;
+        }
+        .recipe-meta-text .category-tag {
+            color: #fd7e14; font-weight: 500;
+            background-color: #fff7ed; padding: 0.25rem 0.6rem; border-radius: 6px;
+        }
+        .recipe-meta-text .rating-stars { color: #fd7e14; }
+        .recipe-meta-text .dot-separator { color: #adb5bd; }
+
+        /* --- Styles du message "Vide" --- */
+        .empty-results-card {
+            background-color: #ffffff; border: 1px solid #f3f4f6;
+            border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            padding: 3rem 2rem; text-align: center;
+        }
+        .empty-results-card h4 { font-weight: 600; color: #212529; }
+        .empty-results-card p { font-size: 1.1rem; color: #6c757d; }
+        .empty-results-card a { color: #fd7e14; font-weight: 500; text-decoration: none; }
+        .empty-results-card a:hover { text-decoration: underline; }
+
+        /* --- Styles de la Sidebar --- */
+        .my-recipes-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+        .sidebar-nav-wrapper {
+            position: sticky; top: 1.5rem;
+            align-self: start; background-color: #ffffff;
+            border-radius: 1rem; border: 1px solid #f3f4f6;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            padding: 1.5rem;
+        }
+        @media (max-width: 991px) {
+            .my-recipes-layout { grid-template-columns: 1fr; }
+            .sidebar-nav-wrapper { position: static; margin-bottom: 2rem; }
+        }
+        .sidebar-avatar {
+            width: 60px; height: 60px; border-radius: 50%;
+            background-color: #fd7e14; color: white; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: bold;
+        }
+        .sidebar-profile-link { position: relative; display: block; }
+        .sidebar-edit-icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 0.8rem;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dee2e6;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .sidebar-profile-link:hover .sidebar-edit-icon {
+            opacity: 1;
+        }
+        .sidebar-nav .nav-link {
+            padding: 0.75rem 1rem; display: flex; align-items: center;
+            font-size: 1rem; font-weight: 500; border-radius: 0.75rem;
+            color: #212529;
+        }
+        .sidebar-nav .nav-link i {
+            font-size: 1.1rem; margin-right: 0.75rem;
+            width: 20px; text-align: center;
+        }
+        .sidebar-nav .nav-link:hover { background-color: #f8f9fa; }
+        .sidebar-nav .nav-link.active {
+            background-color: #fff7ed; color: #fd7e14;
+        }
+        .sidebar-nav .nav-link.active i { color: #fd7e14; }
+    </style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="my-recipes-layout">
 
-    <div class="col-lg-3">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body text-center">
-                <div class="mx-auto mb-2" style="width: 60px; height: 60px; border-radius: 50%; background-color: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold;">
-                    {{ user.username|first|upper }}
-                </div>
-                <h5 class="card-title mb-0">{{ user.username }}</h5>
-                {% if user.email %}
-                    <p class="card-text text-muted small">{{ user.email }}</p>
-                {% endif %}
+    <aside class="sidebar-nav-wrapper">
+        <a href="{% url 'accounts:edit_profile' %}" class="text-center mb-4 d-block text-decoration-none sidebar-profile-link">
+            <div class="mx-auto mb-2 sidebar-avatar">
+                {{ user.username|first|upper }}
             </div>
+            <h5 class="card-title mb-0 text-dark">{{ user.username }}</h5>
+            {% if user.email %}
+                <p class="card-text text-muted small">{{ user.email }}</p>
+            {% endif %}
+            <span class="sidebar-edit-icon" title="Modifier le profil"><i class="bi bi-pencil-fill"></i></span>
+        </a>
 
-            <div class="list-group list-group-flush">
-                <a href="{% url 'my_recipes' %}" class="list-group-item list-group-item-action active" aria-current="true">
-                    🍳 Mes Recettes
+        <div class="sidebar-nav">
+            <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
+                <a href="{% url 'accounts:my_recipes' %}" class="nav-link {% if view_mode == 'recipes' %}active{% endif %}" role="tab">
+                    <i class="bi bi-book"></i>
+                    <span>Mes Recettes</span>
                 </a>
-                <a href="#" class="list-group-item list-group-item-action disabled text-muted">(Bientôt: Mes Favoris)</a>
-                <a href="#" class="list-group-item list-group-item-action disabled text-muted">(Bientôt: Mon Profil)</a>
-            </div>
-
-            <div class="card-body">
-                <a href="{% url 'create_recipe' %}" class="btn btn-success w-100">+ Nouvelle Recette</a>
+                <a href="{% url 'accounts:my_favorites' %}" class="nav-link {% if view_mode == 'favorites' %}active{% endif %}" role="tab">
+                    <i class="bi bi-heart"></i>
+                    <span>Mes Favoris</span>
+                </a>
+                <hr class="my-3">
+                <a href="{% url 'create_recipe' %}" class="btn btn-orange w-100">
+                    <i class="bi bi-plus-lg me-1"></i> Nouvelle Recette
+                </a>
             </div>
         </div>
-    </div>
+    </aside>
 
-    <div class="col-lg-9">
+    <main class="recipe-content-wrapper">
 
-        <h2 class="mb-4">🍳 Mes Recettes</h2>
+        {% csrf_token %}
+
+        <h2 class="mb-4" style="font-weight: 700;">{{ page_title }}</h2>
 
         {% if recipes %}
             <div class="row">
                 {% for recipe in recipes %}
-                    <div class="col-md-4 mb-4">
-                        <div class="card shadow-sm h-100">
-                            {% if recipe.image %}
-                                <img src="{{ recipe.image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
-                            {% else %}
-                                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
-                                    <span class="text-white">🍳 Pas d'image</span>
-                                </div>
-                            {% endif %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card recipe-card h-100">
+                            <div class="recipe-card-img-wrapper">
+                                {% if recipe.image %}
+                                    <img src="{{ recipe.image.url }}" class="recipe-card-img" alt="{{ recipe.title }}">
+                                {% else %}
+                                    <div class="recipe-card-img bg-secondary d-flex align-items-center justify-content-center">
+                                        <span>🍳 Pas d'image</span>
+                                    </div>
+                                {% endif %}
 
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">{{ recipe.title }}</h5>
-                                <p class="card-text text-muted flex-grow-1">{{ recipe.description|truncatewords:15 }}</p>
+                                {% if user.is_authenticated %}
+                                    <button class="card-action-btn favorite-btn {% if user in recipe.favorited_by.all %}favorited{% endif %}"
+                                            data-recipe-id="{{ recipe.id }}"
+                                            title="Ajouter aux favoris">
+                                        <i class="bi bi-heart"></i>
+                                        <i class="bi bi-heart-fill"></i>
+                                    </button>
+                                {% endif %}
 
-                                <div class="mt-auto">
-                                    <p class="mb-1">
-                                        <strong>Catégorie :</strong>
-                                        <span class="badge bg-primary">{{ recipe.category.name }}</span>
-                                    </p>
-                                    <p class="mb-1">
-                                        <strong>Note :</strong>
-                                        <span class="text-warning">{% if recipe.rating %}{{ recipe.rating }}/5 ⭐{% else %}Pas encore noté{% endif %}</span>
-                                    </p>
-                                    <p class="mb-3">
-                                        <strong>Temps :</strong> {{ recipe.preparation_time }} min
-                                    </p>
-                                    <a href="{% url 'recipe_detail' recipe.id %}" class="btn btn-primary w-100">Voir la recette</a>
+                                <a href="{% url 'edit_recipe' recipe.id %}" class="card-action-btn edit-btn"
+                                   title="Modifier la recette">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                            </div>
+
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="{% url 'recipe_detail' recipe.id %}" class="stretched-link text-decoration-none" style="color: black">
+                                        {{ recipe.title }}
+                                    </a>
+                                </h5>
+                                <div class="recipe-meta-text">
+                                    <span class="category-tag">{{ recipe.category.name }}</span>
+                                    <span class="dot-separator">•</span>
+                                    <span>{{ recipe.preparation_time }} min</span>
+                                    <span class="dot-separator">•</span>
+                                    <span class="rating-stars">
+                                        {{ recipe.rating|floatformat:1 }} ⭐
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -72,13 +244,65 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="text-center py-5">
-                <h4>🥺 Vous n'avez pas encore créé de recettes</h4>
-                <p class="text-muted">Commencez par créer votre première recette !</p>
-                <a href="{% url 'create_recipe' %}" class="btn btn-success btn-lg mt-3">Créer ma première recette</a>
+            <div class="empty-results-card">
+                {% if view_mode == 'recipes' %}
+                    <h4 class="h5">Vous n'avez pas encore créé de recettes</h4>
+                    <p class="text-muted">Commencez par créer votre première recette !</p>
+                    <a href="{% url 'create_recipe' %}" class="btn btn-orange btn-lg mt-3">Créer ma première recette</a>
+                {% else %}
+                    <h4 class="h5">Votre liste de favoris est vide</h4>
+                    <p class="text-muted">Parcourez les recettes et cliquez sur le cœur pour les sauvegarder ici.</p>
+                    <a href="{% url 'home' %}" class="btn btn-orange btn-lg mt-3" style="color: white">Parcourir les recettes</a>
+                {% endif %}
             </div>
         {% endif %}
-    </div>
+    </main>
 
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // CORRECTION: La fonction ne cible que les .favorite-btn
+        function attachFavoriteListeners() {
+            document.querySelectorAll('.favorite-btn').forEach(button => {
+                if (button.dataset.listenerAttached) return;
+
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    this.dataset.listenerAttached = 'true';
+
+                    const recipeId = this.dataset.recipeId;
+                    const icon = this;
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    fetch(`/toggle_favorite/${recipeId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            if (data.is_favorited) {
+                                icon.classList.add('favorited');
+                            } else {
+                                icon.classList.remove('favorited');
+                                if ("{{ view_mode }}" == "favorites") {
+                                    icon.closest('.col-lg-6').remove();
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Erreur Fetch favori:', error));
+                });
+            });
+        }
+
+        attachFavoriteListeners();
+    });
+</script>
 {% endblock %}
