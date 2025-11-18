@@ -19,7 +19,7 @@
             font-family: 'Manrope', sans-serif;
         }
 
-        /* --- Vos styles de layout (Inchangés) --- */
+        /* --- Vos styles de layout --- */
         #image-column {
             background-image: url('/media/recipes/merlin-mediumSquareAt3X.jpg');
             background-size: contain;
@@ -27,38 +27,51 @@
             background-position:left;
             background-color: #f8f9fa;
         }
+
         #form-column {
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #f8f9fa;
+
+            /* IMPORTANT: Nécessaire pour positionner le logo en absolu par rapport à cette colonne */
+            position: relative;
         }
+
         .form-card {
             max-width: 650px;
             width: 100%;
-            margin-left: -230px; /* Gardé comme vous l'aviez */
+            margin-left: -230px;
         }
-        /* --- Fin de vos styles de layout --- */
 
+        /* Style pour le logo en haut à droite --- */
+        .page-corner-logo {
+            position: absolute;
+            top: 5px;
+            right: 15px;  /
+            z-index: 10;
+        }
+        .page-corner-logo img {
+            height: 60px; /* Taille du logo */
+            width: auto;
+            object-fit: contain;
+        }
 
-
-        /* 3. Style du titre en orange */
-        .login-title { /* J'utilise la même classe que pour la page login */
-            color: #fd7e14; /* Orange */
+        /* --- Styles du thème Orange --- */
+        .login-title {
+            color: #fd7e14;
             font-weight: 700;
         }
 
-        /* 4. Style de surbrillance (focus) pour les champs */
         .form-control:focus {
             border-color: #fd7e14;
             box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.2);
             z-index: 2;
         }
         .form-floating > .form-control:focus ~ label {
-            color: #fd7e14; /* Label devient orange */
+            color: #fd7e14;
         }
 
-        /* 5. Style pour le bouton orange */
         .btn-orange {
             background-color: #fd7e14;
             border-color: #fd7e14;
@@ -71,7 +84,6 @@
             color: #ffffff;
         }
 
-        /* 6. Style pour les liens en orange */
         .card-body a {
             color: #fd7e14;
             font-weight: 500;
@@ -80,16 +92,28 @@
         .card-body a:hover {
             text-decoration: underline;
         }
+
+        /* Petit ajustement responsive: sur mobile, on enlève la marge négative */
+        @media (max-width: 991px) {
+            .form-card { margin-left: 0; padding: 1rem; }
+            .page-corner-logo { top: 1rem; right: 1rem; } /* Logo un peu plus serré sur mobile */
+        }
     </style>
 </head>
 <body>
 
 <div class="container-fluid g-0">
     <div class="row g-0 min-vh-100">
+
         <div class="col-lg-7 d-none d-lg-block" id="image-column">
         </div>
 
         <div class="col-lg-5 col-12" id="form-column">
+
+            <a href="/" class="page-corner-logo">
+                <img src="/media/logo/logo-forchette.jpg" alt="">
+            </a>
+
             <div class="form-card">
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4 p-md-5">

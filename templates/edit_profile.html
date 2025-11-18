@@ -73,11 +73,7 @@
 
     <main class="recipe-content-wrapper">
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+
 
         <h2 class="mb-4" style="font-weight: 700;">Modifier le Profil</h2>
         <div class="form-card mb-4">

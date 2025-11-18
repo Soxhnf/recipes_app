@@ -122,8 +122,7 @@ def recipe_detail(request, recipe_id):
 
 @login_required
 def create_recipe(request):
-    storage = messages.get_messages(request)
-    storage.used = True
+
 
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)

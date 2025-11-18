@@ -19,7 +19,7 @@
             font-family: 'Manrope', sans-serif;
         }
 
-        /* --- Vos styles de layout (Inchangés) --- */
+        /* --- Vos styles de layout --- */
         #image-column {
             background-image: url('/media/recipes/chicken-parm-pasta-third-67afbcc41b83e.avif');
             background-size: contain;
@@ -32,20 +32,34 @@
             align-items: center;
             justify-content: center;
             background-color: #f8f9fa;
+            /* IMPORTANT: Ajouté pour positionner le logo */
+            position: relative;
         }
         .login-card, .form-card {
             max-width: 550px;
             width: 100%;
-            margin-left: -230px; /* Gardé comme vous l'aviez */
+            margin-left: -230px;
         }
         /* --- Fin de vos styles de layout --- */
 
-
+        /* Style pour le logo en haut à droite */
+        .page-corner-logo {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            z-index: 10;
+        }
+        .page-corner-logo img {
+            height: 60px; /* Taille du logo */
+            width: auto;
+            object-fit: contain;
+        }
+        /* Fin du style du logo */
 
 
         /* 3. Style du titre en orange */
         .login-title {
-            color: #fd7e14; /* Orange */
+            color: #fd7e14;
             font-weight: 700;
         }
 
@@ -53,10 +67,10 @@
         .form-control:focus {
             border-color: #fd7e14;
             box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.2);
-            z-index: 2; /* S'assure que le focus passe au-dessus du label */
+            z-index: 2;
         }
         .form-floating > .form-control:focus ~ label {
-            color: #fd7e14; /* Label devient orange */
+            color: #fd7e14;
         }
 
         /* 5. Style pour le bouton orange */
@@ -67,7 +81,7 @@
             font-weight: 500;
         }
         .btn-orange:hover {
-            background-color: #e67012; /* Orange plus foncé */
+            background-color: #e67012;
             border-color: #e67012;
             color: #ffffff;
         }
@@ -91,6 +105,11 @@
         </div>
 
         <div class="col-lg-5 col-12" id="form-column">
+
+            <a href="/" class="page-corner-logo">
+                <img src="/media/logo/logo-forchette.jpg" alt="">
+            </a>
+
             <div class="login-card">
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4 p-md-5">
@@ -107,9 +126,9 @@
                             {% csrf_token %}
 
                             <div class="form-floating mb-3">
-    <input type="email" name="email" class="form-control" id="id_email" placeholder="Adresse email" required>
-    <label for="id_email">Adresse email</label>
-</div>
+                                <input type="email" name="email" class="form-control" id="id_email" placeholder="Adresse email" required>
+                                <label for="id_email">Adresse email</label>
+                            </div>
                             <div class="form-floating mb-3">
                                 <input type="password" name="password" class="form-control" id="id_password" placeholder="Mot de passe" required>
                                 <label for="id_password">Mot de passe</label>
