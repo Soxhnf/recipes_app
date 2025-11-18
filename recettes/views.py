@@ -12,15 +12,18 @@ from .forms import RecipeForm, ReviewForm
 from django.template.loader import render_to_string
 
 
+
+
 def home(request):
+    # 1. Récupérer VOS recettes
     recipes = Recipe.objects.all()
 
-    # --- Lecture des filtres de l'URL ---
+    # 2. Lire les filtres
     category_name = request.GET.get('category')
     ingredient_query = request.GET.get('ingredient')
     show_favorites = request.GET.get('favorites')
 
-    # --- Logique de filtre (inchangée) ---
+    # 3. Appliquer les filtres (Recherche, Catégorie, Favoris)
     if ingredient_query:
         search_terms = ingredient_query.split()
         conditions = []
@@ -31,70 +34,37 @@ def home(request):
         if conditions:
             query = functools.reduce(operator.and_, conditions)
             recipes = recipes.filter(query)
+
     if category_name:
         recipes = recipes.filter(category__name=category_name)
+
     if show_favorites == 'true' and request.user.is_authenticated:
         recipes = recipes.filter(favorited_by=request.user)
 
-    # --- Appel API ---
-    api_recipes = []
-    try:
-        response = requests.get("https://www.themealdb.com/api/json/v1/1/search.php?s=")
-        data = response.json()
-        api_recipes = data.get("meals", [])
-    except Exception as e:
-        print("Erreur API:", e)
-        api_recipes = []
+    api_recipes = []  # On garde une liste vide pour ne pas casser le template
 
-    # --- Filtrage API ---
-    if api_recipes:
-        if category_name:
-            api_recipes = [r for r in api_recipes if r.get('strCategory') == category_name]
-        if ingredient_query:
-            search_terms = ingredient_query.split()
-            filtered_api_recipes = []
-            for r in api_recipes:
-                all_ingredients = [r.get(f'strIngredient{i}') or '' for i in range(1, 21)]
-                api_ingredients_str = " ".join(all_ingredients).lower()
-                recipe_title = (r.get('strMeal') or '').lower()
-                search_corpus = f"{recipe_title} {api_ingredients_str}"
-                if all(term.lower() in search_corpus for term in search_terms):
-                    filtered_api_recipes.append(r)
-            api_recipes = filtered_api_recipes
 
     categories = Category.objects.all()
 
-    # --- Compteur de favoris  ---
     favorites_count = 0
     if request.user.is_authenticated:
         favorites_count = request.user.favorite_recipes.count()
 
-    # --- Préparation du contexte (ajout de 'user') ---
     context = {
         'recipes': recipes.distinct(),
         'categories': categories,
         'selected_category': category_name,
         'selected_ingredient': ingredient_query,
-        'api_recipes': api_recipes,
+        'api_recipes': api_recipes,  # Sera toujours vide []
         'favorites_count': favorites_count,
-        'user': request.user  # Important pour le partiel
+        'user': request.user
     }
 
-    # --- DÉTECTION AJAX RENVOIE DU JSON ---
+    # Gestion AJAX
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        # 1. Génère le HTML de la grille dans une chaîne de caractères
-        html = render_to_string(
-            'partials/_recipe_grid.html',
-            context,
-            request=request
-        )
-        # 2. Renvoie le HTML ET le compteur à jour
-        return JsonResponse({
-            'html': html,
-            'favorites_count': favorites_count
-        })
+        html = render_to_string('partials/_recipe_grid.html', context, request=request)
+        return JsonResponse({'html': html, 'favorites_count': favorites_count})
 
-    # Si ce n'est pas de l'AJAX, renvoie la page complète
     return render(request, 'home.html', context)
 
 

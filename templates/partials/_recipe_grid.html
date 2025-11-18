@@ -1,6 +1,6 @@
 <div class="row">
 
-    {% if recipes or api_recipes %}
+    {% if recipes %}
 
         {% for recipe in recipes %}
             <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
@@ -40,33 +40,6 @@
                 </div>
             </div>
         {% endfor %}
-
-        {% if api_recipes %}
-            <div class="col-12">
-                <h3 class="global-recipes-title text-center mb-4 mt-4">Sélection internationale de recettes</h3>
-            </div>
-            {% for recipe in api_recipes %}
-                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                    <div class="card recipe-card h-100">
-                        <div class="recipe-card-img-wrapper">
-                            <img src="{{ recipe.strMealThumb }}" class="recipe-card-img" alt="{{ recipe.strMeal }}">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <a href="{{ recipe.strSource|default:recipe.strYoutube }}" target="_blank" class="stretched-link text-decoration-none" style="color: black">
-                                    {{ recipe.strMeal }}
-                                </a>
-                            </h5>
-                            <div class="recipe-meta-text">
-                                <span class="category-tag">{{ recipe.strCategory }}</span>
-                                <span class="dot-separator">•</span>
-                                <span>{{ recipe.strArea }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
 
     {% else %}
         <div class="col-12">
