@@ -30,7 +30,7 @@ def register(request):
                 user = User.objects.create_user(username=username, email=email, password=password)
                 user.save()
                 messages.success(request, "Compte créé avec succès !")
-                return redirect('login')
+                return redirect('accounts:login')
         else:
             messages.error(request, "Les mots de passe ne correspondent pas")
     return render(request, 'register.html')

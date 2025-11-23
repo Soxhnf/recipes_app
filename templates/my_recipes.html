@@ -17,7 +17,7 @@
         .recipe-card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease-in-out; }
         .recipe-card:hover .recipe-card-img { transform: scale(1.08); }
 
-
+Créer ma première recette
         .card-action-btn {
             position: absolute;
             right: 0.8rem;
@@ -248,7 +248,7 @@
                 {% if view_mode == 'recipes' %}
                     <h4 class="h5">Vous n'avez pas encore créé de recettes</h4>
                     <p class="text-muted">Commencez par créer votre première recette !</p>
-                    <a href="{% url 'create_recipe' %}" class="btn btn-orange btn-lg mt-3">Créer ma première recette</a>
+                    <a href="{% url 'create_recipe' %}" class="btn btn-orange btn-lg mt-3" style="color: white">Créer ma première recette</a>
                 {% else %}
                     <h4 class="h5">Votre liste de favoris est vide</h4>
                     <p class="text-muted">Parcourez les recettes et cliquez sur le cœur pour les sauvegarder ici.</p>
